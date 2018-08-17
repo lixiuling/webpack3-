@@ -4,39 +4,47 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 let autoprefixer = require('autoprefixer');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 
 module.exports = {
     entry: {
-        demo1: path.resolve(__dirname, 'src/demo1/index.js')
+        demo1: path.resolve(__dirname, 'src/demo1/index.js'),
+        vendor: [
+            'lodash'
+        ]
     },
     devtool: 'inline-source-map',
     devServer: {
         contentBase: path.resolve(__dirname, 'dist/demo1'),
-        hot: true,
+        hot: false,
         port: 3000,
     },
     plugins: [
-        //new webpack.optimize.UglifyJsPlugin(),//webpack4+废弃 生产模式会自动压缩
+        new CleanWebpackPlugin(['dist/demo1']),
+        // new webpack.ProvidePlugin({
+        //     _: 'lodash'
+        // }),
+        new UglifyJsPlugin(),
         new HtmlWebpackPlugin({
             title: 'Code Splitting'
         }),
-        // new webpack.optimize.CommonsChunkPlugin({ //webpack4+废弃 改用optimization代替
-        //     name: 'manifest'
-        // }),
-        new CleanWebpackPlugin(['dist/demo1']),
+        new webpack.optimize.CommonsChunkPlugin({
+            name: 'vendor'
+        }),
+        new webpack.optimize.CommonsChunkPlugin({
+            name: 'manifest'
+        }),
         new ExtractTextPlugin('[name].css'),
         new webpack.NamedModulesPlugin(),
-        new webpack.HotModuleReplacementPlugin()
+        //new webpack.HashedModuleIdsPlugin(),//用于生产环境
+
+        // 如果是开发环境，将配置文件中的chunkhash 替换为hash，如果是生产环境，不要使用参数 --hot
+        //new webpack.HotModuleReplacementPlugin()
     ],
-    optimization: {
-        splitChunks: {
-            name: 'manifest'
-        }
-    },
     output: {
         path: path.resolve(__dirname, 'dist/demo1'),
-        filename: '[name].[hash].js', //[name].[chunkhash].js webpack4+不能用
+        filename: '[name].[chunkhash].js',
         chunkFilename: '[name].bundle.js',
         publicPath: '/'
     },
